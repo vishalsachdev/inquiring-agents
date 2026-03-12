@@ -517,7 +517,7 @@ const HTML_TEMPLATE = `<!DOCTYPE html>
         var chunk = await reader.read();
         if (chunk.done) break;
         buffer += decoder.decode(chunk.value, { stream: true });
-        var lines = buffer.split('\n');
+        var lines = buffer.split("\\n");
         buffer = lines.pop() || '';
         for (var i = 0; i < lines.length; i++) {
           var line = lines[i];
@@ -542,7 +542,7 @@ const HTML_TEMPLATE = `<!DOCTYPE html>
     if (status === 'streaming') statusEl.textContent = '\u27F3 Streaming...';
     else if (status === 'complete') statusEl.textContent = '\u2713 Complete';
     else if (status === 'error') {
-      statusEl.innerHTML = '\u2717 Error <button onclick="window._retryPhil(\'' + phil + '\')">Retry</button>';
+      statusEl.innerHTML = '\u2717 Error <button onclick="window._retryPhil(&quot;' + phil + '&quot;)">Retry</button>';
     }
     else if (status === 'idle') statusEl.textContent = '\u25CC Waiting';
   }
@@ -610,7 +610,7 @@ const HTML_TEMPLATE = `<!DOCTYPE html>
         var chunk = await reader.read();
         if (chunk.done) break;
         buffer += decoder.decode(chunk.value, { stream: true });
-        var lines = buffer.split('\n');
+        var lines = buffer.split("\\n");
         buffer = lines.pop() || '';
         for (var i = 0; i < lines.length; i++) {
           var line = lines[i];
