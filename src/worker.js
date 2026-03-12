@@ -478,7 +478,7 @@ const HTML_TEMPLATE = `<!DOCTYPE html>
 </div>
 
 <div class="footer">
-  Based on <a href="https://github.com/snerur/Inquiring-Agents" target="_blank">Inquiring-Agents</a> by <a href="https://github.com/snerur" target="_blank">Sridhar Nerur</a> (CrewAI + Jupyter notebook)<br>
+  Based on <a href="https://github.com/snerur/Inquiring-Agents" target="_blank">Inquiring-Agents</a> by <a href="https://www.linkedin.com/posts/sridharnerur_github-snerurinquiring-agents-activity-7437895999257284608-Dcv9" target="_blank">Sridhar Nerur</a> (CrewAI + Jupyter notebook)<br>
   Rebuilt as an interactive teaching tool: OpenAI streaming, Cloudflare Workers, student voice injection<br>
   Powered by OpenAI &middot; Churchman's Design of Inquiring Systems (1971) &middot; Delphi Method
 </div>
