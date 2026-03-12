@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Inquiring Agents — UI Concept v2</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #f8f9fa; color: #1a1a2e; font-family: 'Georgia', serif; }
+
+  /* Header */
+  .header { text-align: center; padding: 40px 20px 20px; border-bottom: 1px solid #e2e8f0; background: white; }
+  .header h1 { font-size: 36px; color: #1a1a2e; letter-spacing: -0.5px; }
+  .header h1 span { color: #d97706; }
+  .header p { color: #6b7280; font-size: 17px; margin-top: 8px; font-family: sans-serif; }
+
+  /* Topic bar */
+  .topic-bar { max-width: 800px; margin: 28px auto; padding: 0 20px; display: flex; gap: 12px; }
+  .topic-bar select, .topic-bar input {
+    flex: 1; background: white; border: 2px solid #e2e8f0; color: #1a1a2e;
+    padding: 14px 18px; border-radius: 10px; font-size: 17px; font-family: sans-serif;
+  }
+  .topic-bar select:focus, .topic-bar input:focus { border-color: #d97706; outline: none; }
+  .topic-bar button {
+    background: #d97706; color: white; border: none; padding: 14px 28px;
+    border-radius: 10px; font-weight: bold; font-size: 17px; cursor: pointer; font-family: sans-serif;
+  }
+  .topic-bar button:hover { background: #b45309; }
+
+  /* Round indicator */
+  .round-bar { display: flex; justify-content: center; gap: 10px; padding: 24px; }
+  .round-pill {
+    padding: 8px 22px; border-radius: 20px; font-size: 14px; font-family: sans-serif;
+    font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;
+  }
+  .round-pill.active { background: #d97706; color: white; }
+  .round-pill.done { background: #ecfdf5; color: #059669; border: 2px solid #059669; }
+  .round-pill.pending { background: #f1f5f9; color: #94a3b8; border: 2px solid #e2e8f0; }
+
+  /* Philosopher grid */
+  .philosophers { display: grid; grid-template-columns: repeat(5, 1fr); gap: 14px; max-width: 1300px; margin: 0 auto; padding: 0 20px; }
+  .phil-card {
+    background: white; border-radius: 14px; overflow: hidden;
+    border: 2px solid #e2e8f0; display: flex; flex-direction: column;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+  }
+  .phil-header {
+    padding: 16px 18px; display: flex; align-items: center; gap: 12px;
+    border-bottom: 2px solid #f1f5f9;
+  }
+  .phil-avatar {
+    width: 42px; height: 42px; border-radius: 50%; display: flex;
+    align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0;
+  }
+  .phil-name { font-weight: bold; font-size: 17px; font-family: sans-serif; }
+  .phil-tradition { font-size: 13px; color: #6b7280; font-family: sans-serif; }
+  .phil-body {
+    padding: 16px 18px; font-size: 15px; line-height: 1.8; flex: 1;
+    max-height: 320px; overflow-y: auto; color: #374151;
+  }
+  .phil-body p { margin-bottom: 10px; }
+  .phil-body strong { color: #1a1a2e; }
+  .phil-status {
+    padding: 10px 18px; font-size: 13px; color: #6b7280;
+    border-top: 2px solid #f1f5f9; font-family: sans-serif; background: #fafbfc;
+  }
+
+  /* Streaming cursor */
+  .cursor { display: inline-block; width: 2px; height: 16px; background: #d97706; animation: blink 0.8s infinite; vertical-align: text-bottom; margin-left: 2px; }
+  @keyframes blink { 0%,50% { opacity: 1; } 51%,100% { opacity: 0; } }
+
+  /* Colors per philosopher */
+  .phil-leibnitz .phil-avatar { background: #dbeafe; color: #2563eb; }
+  .phil-leibnitz .phil-card { border-top: 3px solid #3b82f6; }
+  .phil-locke .phil-avatar { background: #d1fae5; color: #059669; }
+  .phil-kant .phil-avatar { background: #fef3c7; color: #d97706; }
+  .phil-hegel .phil-avatar { background: #fee2e2; color: #dc2626; }
+  .phil-singer .phil-avatar { background: #ede9fe; color: #7c3aed; }
+
+  /* Colored top borders */
+  .phil-leibnitz { border-top: 3px solid #3b82f6; }
+  .phil-locke { border-top: 3px solid #10b981; }
+  .phil-kant { border-top: 3px solid #d97706; }
+  .phil-hegel { border-top: 3px solid #ef4444; }
+  .phil-singer { border-top: 3px solid #7c3aed; }
+
+  /* Injection bar */
+  .inject-bar {
+    max-width: 1300px; margin: 24px auto; padding: 0 20px;
+    display: flex; gap: 12px; align-items: center;
+  }
+  .inject-bar input {
+    flex: 1; background: white; border: 2px solid #10b981; color: #1a1a2e;
+    padding: 14px 18px; border-radius: 10px; font-size: 16px; font-family: sans-serif;
+  }
+  .inject-bar input::placeholder { color: #6b7280; }
+  .inject-bar button {
+    background: #10b981; color: white; border: none; padding: 14px 24px;
+    border-radius: 10px; font-weight: bold; font-size: 16px; cursor: pointer; font-family: sans-serif;
+  }
+  .inject-bar button:hover { background: #059669; }
+  .inject-label {
+    font-size: 14px; color: #10b981; font-family: sans-serif; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 0.5px; white-space: nowrap;
+  }
+
+  /* Synthesis panel */
+  .synthesis { max-width: 1300px; margin: 24px auto; padding: 0 20px; }
+  .synthesis-card {
+    background: white; border: 2px solid #fbbf2440; border-radius: 14px; padding: 28px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+  }
+  .synthesis-card h3 { color: #d97706; font-size: 22px; margin-bottom: 14px; }
+  .synthesis-card .content { font-size: 16px; line-height: 1.8; color: #374151; }
+
+  /* Section label */
+  .section-label {
+    max-width: 1300px; margin: 20px auto 10px; padding: 0 20px;
+    font-size: 13px; color: #6b7280; font-family: sans-serif;
+    text-transform: uppercase; letter-spacing: 1px; font-weight: 600;
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>Inquiring <span>Agents</span></h1>
+  <p>Churchman's Five Inquiring Systems — A Multi-Agent Delphi Debate on AI Ethics</p>
+</div>
+
+<div class="topic-bar">
+  <select>
+    <option>Choose a dilemma...</option>
+    <option selected>Autonomous hiring algorithms</option>
+    <option>Deepfake regulation</option>
+    <option>AI in criminal sentencing</option>
+    <option>Autonomous weapons</option>
+    <option>AI-generated art & copyright</option>
+  </select>
+  <button>▶ Start Debate</button>
+</div>
+
+<div class="round-bar">
+  <div class="round-pill done">Round 0 ✓</div>
+  <div class="round-pill active">Round 1</div>
+  <div class="round-pill pending">Round 2</div>
+  <div class="round-pill pending">Synthesis</div>
+</div>
+
+<div class="section-label">Philosopher Positions — Round 1: First Delphi Iteration</div>
+
+<div class="philosophers">
+  <div class="phil-card phil-leibnitz">
+    <div class="phil-header">
+      <div class="phil-avatar">🔷</div>
+      <div><div class="phil-name">Leibnitz</div><div class="phil-tradition">Rationalist</div></div>
+    </div>
+    <div class="phil-body">
+      <p><strong>Review of Others:</strong> Locke's insistence on empirical audits is admirable but lacks formal grounding. Kant's categorical imperative aligns with my axiomatic approach — we both seek universal rules. Hegel's dialectical method introduces useful tension but risks incoherence.</p>
+      <p><strong>Accommodations:</strong> I now accept that axioms must be testable (from Locke), provided tests are formalized as verification procedures derived from the axioms themselves.</p>
+      <p><strong>Revised Position:</strong> All hiring algorithms must satisfy three formal axioms: (1) No protected attribute shall causally influence output...</p>
+      <span class="cursor"></span>
+    </div>
+    <div class="phil-status">⟳ Streaming... 247 tokens</div>
+  </div>
+
+  <div class="phil-card phil-locke">
+    <div class="phil-header">
+      <div class="phil-avatar">🟢</div>
+      <div><div class="phil-name">Locke</div><div class="phil-tradition">Empiricist</div></div>
+    </div>
+    <div class="phil-body">
+      <p><strong>Review of Others:</strong> Leibnitz offers elegant formal structure, but axioms disconnected from evidence are dangerous. Kant's dignity principle can be operationalized as measurable fairness metrics. Singer rightly expands who we measure impact on.</p>
+      <p><strong>Accommodations:</strong> I accept Kant's dignity as a constraint — it translates to: no hiring algorithm may produce outcomes that a reasonable audit would flag as treating applicants merely as data points.</p>
+      <p><strong>What I Still Reject:</strong> Leibnitz's claim that formal consistency alone guarantees ethical behavior.</p>
+    </div>
+    <div class="phil-status">✓ Complete — 312 tokens</div>
+  </div>
+
+  <div class="phil-card phil-kant">
+    <div class="phil-header">
+      <div class="phil-avatar">🟡</div>
+      <div><div class="phil-name">Kant</div><div class="phil-tradition">Synthetic / Duty</div></div>
+    </div>
+    <div class="phil-body">
+      <p><strong>Categorical Imperative:</strong> Would we accept a world where ALL employers used this algorithm? If it systematically disadvantages any group, it fails universalization.</p>
+      <p><strong>Human Dignity:</strong> Every applicant must (1) be informed an algorithm is evaluating them, (2) have the right to human review, (3) never be reduced to a statistical profile without recourse.</p>
+      <p><strong>Accommodations:</strong> Locke's empirical audits serve as the mechanism for detecting universalization failures. Accepted.</p>
+    </div>
+    <div class="phil-status">✓ Complete — 289 tokens</div>
+  </div>
+
+  <div class="phil-card phil-hegel">
+    <div class="phil-header">
+      <div class="phil-avatar">🔴</div>
+      <div><div class="phil-name">Hegel</div><div class="phil-tradition">Dialectical</div></div>
+    </div>
+    <div class="phil-body" style="color: #94a3b8; font-style: italic; display: flex; align-items: center; justify-content: center; font-size: 16px;">
+      Waiting for Round 1...
+    </div>
+    <div class="phil-status">◌ Queued</div>
+  </div>
+
+  <div class="phil-card phil-singer">
+    <div class="phil-header">
+      <div class="phil-avatar">🟣</div>
+      <div><div class="phil-name">Singer</div><div class="phil-tradition">Pragmatist</div></div>
+    </div>
+    <div class="phil-body" style="color: #94a3b8; font-style: italic; display: flex; align-items: center; justify-content: center; font-size: 16px;">
+      Waiting for Round 1...
+    </div>
+    <div class="phil-status">◌ Queued</div>
+  </div>
+</div>
+
+<div class="inject-bar">
+  <div class="inject-label">Your Voice →</div>
+  <input type="text" placeholder="Inject a perspective before Round 2 (e.g., 'What about candidates with disabilities?')">
+  <button>Inject</button>
+</div>
+
+<div class="synthesis">
+  <div class="synthesis-card">
+    <h3>⚖️ Final Policy — Coordinator Synthesis</h3>
+    <div class="content" style="color: #94a3b8; font-style: italic;">Will appear after Round 2 completes...</div>
+  </div>
+</div>
+
+<div style="text-align: center; padding: 24px; color: #94a3b8; font-size: 14px; font-family: sans-serif;">
+  Powered by OpenAI · Churchman's Design of Inquiring Systems (1971) · Delphi Method
+</div>
+
+</body>
+</html>

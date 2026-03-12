@@ -24,13 +24,19 @@ Based on: https://github.com/snerur/Inquiring-Agents
 ```json
 {
   "philosopher": "leibnitz",
-  "round": 0,
+  "round": 1,
   "topic": "Autonomous hiring algorithms",
-  "priorPositions": { "leibnitz": "...", "locke": "...", ... },
-  "injection": "What about candidates with disabilities?"
+  "priorRoundPositions": { "leibnitz": "...", "locke": "...", "kant": "...", "hegel": "...", "singer": "..." },
+  "sameRoundPositionsSoFar": { "leibnitz": "..." },
+  "injections": ["What about candidates with disabilities?"]
 }
 ```
+- `priorRoundPositions`: All positions from the previous completed round (empty for Round 0)
+- `sameRoundPositionsSoFar`: Positions already completed in the current round (empty for the first philosopher)
+- `injections`: All student injections so far (empty array if none)
+
 Response: SSE stream of `data: {"token": "..."}` events, ending with `data: [DONE]`.
+On error: `data: {"error": "rate_limit_exceeded"}` or `data: {"error": "timeout"}` then stream closes.
 
 **POST /api/synthesize**
 ```json
@@ -52,6 +58,9 @@ Response: Same SSE stream format.
 - Streaming: `stream: true` on all calls
 - Worker reads `OPENAI_API_KEY` from Wrangler secret
 - Each philosopher has a system prompt encoding their role, backstory, and epistemological stance (ported from the original CrewAI agent definitions)
+- All OpenAI fetch calls use `AbortController` with 25-second timeout (Cloudflare Workers have a 30s subrequest limit)
+- On timeout or OpenAI error, Worker sends `data: {"error": "..."}` SSE event and closes stream
+- Frontend must use `fetch()` + `ReadableStream` reader for SSE (not `EventSource`, which only supports GET)
 
 ### Data Flow
 
@@ -65,7 +74,7 @@ User picks topic
     → POST /api/synthesize (coordinator produces final policy)
 ```
 
-Round 0 calls run in parallel (philosophers don't see each other). Rounds 1 and 2 run sequentially so each philosopher can reference prior outputs in the same round.
+Round 0 calls run in parallel (philosophers don't see each other). Rounds 1 and 2 run sequentially — each philosopher sees all prior round positions PLUS same-round positions from philosophers who went before them (matching the original CrewAI sequential chain behavior).
 
 ## Frontend
 
@@ -116,8 +125,10 @@ All state lives in the browser (vanilla JS, no framework):
 - `round`: 0 | 1 | 2 | "synthesis"
 - `positions`: `{ round0: {}, round1: {}, round2: {} }`
 - `injections`: `string[]` (max 2, one between each round)
-- `isStreaming`: boolean
+- `philosopherState`: `Record<string, 'idle' | 'streaming' | 'complete' | 'error'>` (per-card streaming state)
 - `activePhilosopher`: string | null
+
+The "Continue to Round N" / "Skip" button activates only when all 5 philosophers in the current round are in `complete` or `error` state. On error, the card shows a retry button.
 
 ## Philosopher System Prompts
 
@@ -143,7 +154,7 @@ inquiring-agents/
 └── docs/
 ```
 
-Single source file. The HTML is a template literal inside `worker.js`. Philosopher system prompts are constants in the same file.
+Single source file. The HTML is a template literal inside `worker.js`. Philosopher system prompts are module-scope constants in the same file. Total size ~800-900 lines (well within Cloudflare's 1MB compressed script limit).
 
 ## Deployment
 

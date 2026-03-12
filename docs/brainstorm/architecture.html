@@ -1,0 +1,109 @@
+<h2>Inquiring Agents — Architecture</h2>
+<p class="subtitle">Single Cloudflare Worker, direct OpenAI streaming, interactive Delphi debate</p>
+
+<div class="section">
+  <h3>System Architecture</h3>
+  <div class="mockup">
+    <div class="mockup-header">Request Flow</div>
+    <div class="mockup-body" style="font-family: monospace; font-size: 13px; line-height: 1.8; padding: 24px;">
+      <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 16px;">
+        <div style="background: #3b82f6; color: white; padding: 8px 16px; border-radius: 8px; font-weight: bold;">Browser</div>
+        <div style="color: #888;">──GET /──▶</div>
+        <div style="background: #f59e0b; color: white; padding: 8px 16px; border-radius: 8px; font-weight: bold;">Cloudflare Worker</div>
+        <div style="color: #888;">──serves──▶</div>
+        <div style="background: #10b981; color: white; padding: 8px 16px; border-radius: 8px;">index.html (inline)</div>
+      </div>
+      <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 16px;">
+        <div style="background: #3b82f6; color: white; padding: 8px 16px; border-radius: 8px; font-weight: bold;">Browser</div>
+        <div style="color: #888;">──POST /api/debate──▶</div>
+        <div style="background: #f59e0b; color: white; padding: 8px 16px; border-radius: 8px; font-weight: bold;">Worker</div>
+        <div style="color: #888;">──stream──▶</div>
+        <div style="background: #8b5cf6; color: white; padding: 8px 16px; border-radius: 8px;">OpenAI API</div>
+      </div>
+      <div style="display: flex; align-items: center; gap: 12px;">
+        <div style="background: #3b82f6; color: white; padding: 8px 16px; border-radius: 8px; font-weight: bold;">Browser</div>
+        <div style="color: #888;">──POST /api/inject──▶</div>
+        <div style="background: #f59e0b; color: white; padding: 8px 16px; border-radius: 8px; font-weight: bold;">Worker</div>
+        <div style="color: #888;">──adds to context──▶</div>
+        <div style="background: #8b5cf6; color: white; padding: 8px 16px; border-radius: 8px;">Next Round</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>Worker Routes</h3>
+  <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px;">
+    <div style="background: #1e293b; border: 1px solid #334155; border-radius: 8px; padding: 16px;">
+      <div style="color: #f59e0b; font-weight: bold; margin-bottom: 8px;">GET /</div>
+      <div style="color: #94a3b8; font-size: 13px;">Serves the full HTML/CSS/JS app as a single inline response. No static assets needed.</div>
+    </div>
+    <div style="background: #1e293b; border: 1px solid #334155; border-radius: 8px; padding: 16px;">
+      <div style="color: #f59e0b; font-weight: bold; margin-bottom: 8px;">POST /api/debate</div>
+      <div style="color: #94a3b8; font-size: 13px;">Runs one philosopher's turn. Streams SSE back to browser. Body: {philosopher, round, topic, history, injection?}</div>
+    </div>
+    <div style="background: #1e293b; border: 1px solid #334155; border-radius: 8px; padding: 16px;">
+      <div style="color: #f59e0b; font-weight: bold; margin-bottom: 8px;">POST /api/synthesize</div>
+      <div style="color: #94a3b8; font-size: 13px;">Coordinator synthesizes final policy from all positions. Streams SSE.</div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>Data Flow Per Debate</h3>
+  <div style="background: #1e293b; border: 1px solid #334155; border-radius: 8px; padding: 20px; font-size: 13px; color: #e2e8f0;">
+    <div style="display: flex; gap: 20px; align-items: flex-start;">
+      <div style="flex: 1; text-align: center;">
+        <div style="background: #3b82f6; padding: 8px; border-radius: 6px; font-weight: bold; margin-bottom: 8px;">Round 0</div>
+        <div style="color: #94a3b8; font-size: 12px;">5 parallel streams<br>Each philosopher states initial position independently</div>
+      </div>
+      <div style="color: #f59e0b; font-size: 24px; align-self: center;">→</div>
+      <div style="flex: 1; text-align: center;">
+        <div style="background: #10b981; padding: 8px; border-radius: 6px; font-weight: bold; color: white; margin-bottom: 8px;">💬 Inject?</div>
+        <div style="color: #94a3b8; font-size: 12px;">Student can add a perspective before Round 1</div>
+      </div>
+      <div style="color: #f59e0b; font-size: 24px; align-self: center;">→</div>
+      <div style="flex: 1; text-align: center;">
+        <div style="background: #8b5cf6; padding: 8px; border-radius: 6px; font-weight: bold; color: white; margin-bottom: 8px;">Round 1</div>
+        <div style="color: #94a3b8; font-size: 12px;">5 sequential streams<br>Each reads all R0 + injection</div>
+      </div>
+      <div style="color: #f59e0b; font-size: 24px; align-self: center;">→</div>
+      <div style="flex: 1; text-align: center;">
+        <div style="background: #10b981; padding: 8px; border-radius: 6px; font-weight: bold; color: white; margin-bottom: 8px;">💬 Inject?</div>
+        <div style="color: #94a3b8; font-size: 12px;">Student can add another perspective</div>
+      </div>
+      <div style="color: #f59e0b; font-size: 24px; align-self: center;">→</div>
+      <div style="flex: 1; text-align: center;">
+        <div style="background: #ef4444; padding: 8px; border-radius: 6px; font-weight: bold; color: white; margin-bottom: 8px;">Round 2</div>
+        <div style="color: #94a3b8; font-size: 12px;">5 sequential streams<br>Final positions</div>
+      </div>
+      <div style="color: #f59e0b; font-size: 24px; align-self: center;">→</div>
+      <div style="flex: 1; text-align: center;">
+        <div style="background: #f59e0b; padding: 8px; border-radius: 6px; font-weight: bold; color: white; margin-bottom: 8px;">Synthesis</div>
+        <div style="color: #94a3b8; font-size: 12px;">Coordinator produces final policy</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>Key Design Decisions</h3>
+  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+    <div style="background: #1e293b; border-left: 3px solid #3b82f6; padding: 12px 16px; border-radius: 4px;">
+      <strong style="color: #e2e8f0;">Single file Worker</strong>
+      <div style="color: #94a3b8; font-size: 13px; margin-top: 4px;">HTML is a template string inside the Worker. One wrangler deploy, zero build step.</div>
+    </div>
+    <div style="background: #1e293b; border-left: 3px solid #10b981; padding: 12px 16px; border-radius: 4px;">
+      <strong style="color: #e2e8f0;">SSE streaming</strong>
+      <div style="color: #94a3b8; font-size: 13px; margin-top: 4px;">OpenAI stream → Worker transforms → SSE to browser. Text appears token-by-token.</div>
+    </div>
+    <div style="background: #1e293b; border-left: 3px solid #f59e0b; padding: 12px 16px; border-radius: 4px;">
+      <strong style="color: #e2e8f0;">Client-side orchestration</strong>
+      <div style="color: #94a3b8; font-size: 13px; margin-top: 4px;">Browser drives the sequence (R0→inject?→R1→inject?→R2→synth). Worker is stateless — just proxies to OpenAI.</div>
+    </div>
+    <div style="background: #1e293b; border-left: 3px solid #8b5cf6; padding: 12px 16px; border-radius: 4px;">
+      <strong style="color: #e2e8f0;">API key in Worker secret</strong>
+      <div style="color: #94a3b8; font-size: 13px; margin-top: 4px;">OPENAI_API_KEY stored as Wrangler secret. Never exposed to browser.</div>
+    </div>
+  </div>
+</div>
