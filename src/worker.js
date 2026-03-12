@@ -381,7 +381,9 @@ const HTML_TEMPLATE = `<!DOCTYPE html>
   .synthesis-card .content { font-size: 16px; line-height: 1.8; color: #374151; white-space: pre-wrap; word-wrap: break-word; }
 
   /* Footer */
-  .footer { text-align: center; padding: 24px; color: #94a3b8; font-size: 14px; font-family: sans-serif; }
+  .footer { text-align: center; padding: 24px; color: #94a3b8; font-size: 14px; font-family: sans-serif; line-height: 1.8; }
+  .footer a { color: #d97706; text-decoration: none; }
+  .footer a:hover { text-decoration: underline; }
 </style>
 </head>
 <body>
@@ -476,6 +478,8 @@ const HTML_TEMPLATE = `<!DOCTYPE html>
 </div>
 
 <div class="footer">
+  Based on <a href="https://github.com/snerur/Inquiring-Agents" target="_blank">Inquiring-Agents</a> by <a href="https://github.com/snerur" target="_blank">Sridhar Nerur</a> (CrewAI + Jupyter notebook)<br>
+  Rebuilt as an interactive teaching tool: OpenAI streaming, Cloudflare Workers, student voice injection<br>
   Powered by OpenAI &middot; Churchman's Design of Inquiring Systems (1971) &middot; Delphi Method
 </div>
 
