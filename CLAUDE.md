@@ -44,3 +44,9 @@ The frontend JS lives inside a backtick template literal (`HTML_TEMPLATE`). This
 - **Live URL**: `inquiring-agents.illinihunt.org` (custom domain via Workers Custom Domains API)
 - **workers.dev URL exists** but gets flagged as malicious by LinkedIn and other platforms
 - Config vars (`OPENAI_MODEL`, `OPENAI_TEMPERATURE`) are in `wrangler.toml`; the API key is a secret (not in toml)
+
+## Session Log
+
+### 2026-03-12
+- Completed: Built entire app from scratch — brainstormed design with visual companion, wrote spec + plan, implemented all 8 tasks (scaffold, prompts, streaming proxy, frontend). Fixed 3 template literal escape bugs (`\n`, `\'`). Deployed to Cloudflare Workers. Set up custom domain (inquiring-agents.illinihunt.org) after workers.dev got flagged by LinkedIn. Added attribution to Sridhar Nerur's original repo. Added listing on AgentLab site. Created README and CLAUDE.md.
+- Next: Render markdown bold (`**text**`) as HTML in philosopher cards and synthesis panel. Consider adding a "copy synthesis" button.
